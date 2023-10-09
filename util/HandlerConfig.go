@@ -15,6 +15,8 @@ func (config *HandlerConfig) Execute(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if config.HttpMethod == "" {
 		config.HttpMethod = "GET"
 	}
