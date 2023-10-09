@@ -1,4 +1,4 @@
-module template-go-vercel
+module yoshi-api
 
 go 1.20
 
