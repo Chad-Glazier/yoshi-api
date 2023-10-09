@@ -14,7 +14,7 @@ func PingDB(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
 	if err != nil {
 		util.SendError(w, types.ErrorInfo{
-			Status: http.StatusInternalServerError,
+			Status:  http.StatusInternalServerError,
 			Message: "failed to connect to database",
 		})
 	}
@@ -22,7 +22,7 @@ func PingDB(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.Ping(); err != nil {
 		util.SendError(w, types.ErrorInfo{
-			Status: http.StatusServiceUnavailable,
+			Status:  http.StatusServiceUnavailable,
 			Message: "database failed to respond",
 		})
 	}

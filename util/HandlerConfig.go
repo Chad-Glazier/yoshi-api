@@ -21,7 +21,7 @@ func (config *HandlerConfig) Execute(
 
 	if r.Method != config.HttpMethod {
 		SendError(w, types.ErrorInfo{
-			Status: 405,
+			Status:  405,
 			Message: "This endpoint only accepts " + config.HttpMethod + " requests",
 		})
 		return
