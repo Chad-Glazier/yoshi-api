@@ -6,10 +6,10 @@ import (
 	"yoshi-api/util"
 )
 
-func Ping(w http.ResponseWriter, r *http.Request) {
+func PingDB(w http.ResponseWriter, r *http.Request) {
 	handler := util.HandlerConfig{
 		HttpMethod:  "GET",
-		BaseHandler: handlers.Ping,
+		BaseHandler: handlers.PingDB,
 	}
 
 	handler.Execute(w, r)

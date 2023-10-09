@@ -11,7 +11,7 @@ func Authenticated(r *http.Request) (err *types.ErrorInfo) {
 	// authentication logic here!
 	if !authenticated {
 		return &types.ErrorInfo{
-			Status: 401,
+			Status: http.StatusUnauthorized,
 			Message: "Authorization failed",
 		}
 	}
