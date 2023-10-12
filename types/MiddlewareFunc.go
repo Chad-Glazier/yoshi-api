@@ -4,4 +4,4 @@ import (
 	"net/http"
 )
 
-type MiddlewareFunc func(r *http.Request) (err *ErrorInfo)
+type MiddlewareFunc func(r *http.Request) (err *ApiError)

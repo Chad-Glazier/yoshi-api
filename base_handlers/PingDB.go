@@ -1,11 +1,10 @@
-package handlers
+package base_handlers
 
 import (
 	"database/sql"
 	"net/http"
 	"os"
 	"yoshi-api/types"
-	"yoshi-api/util"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -13,20 +12,19 @@ import (
 func PingDB(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
 	if err != nil {
-		util.SendError(w, types.ErrorInfo{
+		(&types.ApiError{
 			Status:  http.StatusInternalServerError,
 			Message: "failed to connect to database",
-		})
+		}).Send(w)
 	}
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		util.SendError(w, types.ErrorInfo{
-			Status:  http.StatusServiceUnavailable,
+		(&types.ApiError{
+			Status: http.StatusServiceUnavailable,
 			Message: "database failed to respond",
-		})
+		}).Send(w)
 	}
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }
