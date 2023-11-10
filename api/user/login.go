@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"yoshi/db"
 	"yoshi/db/user"
 	"yoshi/util"
 )
@@ -12,18 +13,24 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	credentials, err := util.ParseBody[user.UserCredentials](r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	sessionId, err := user.LogIn(r, credentials)
+	db, err := db.Connect()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer db.Close()
+
+	session, err := user.LogIn(db, credentials)
 	switch err {
 	case nil:
 		break
@@ -34,9 +41,9 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	default:
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	util.SetSessionCookie(sessionId, w)
+	session.SetCookie(w)
 }

@@ -1,24 +1,21 @@
 package user
 
 import (
+	"database/sql"
+
 	"golang.org/x/crypto/bcrypt"
-	"yoshi/db"
 )
 
-
-// Registers a user and creates a new session, returning the session ID.
+// Registers a user and creates a new session, returning the session cookie.
 //
 // Potential errors include:
-// - `ErrDatabaseError`
-// - `ErrEmailTaken`
-// - `ErrDisplayNameTaken`
-// - `ErrPwdTooLong`
-func Register(u *UserRegistration) (string, error) {
-	db, err := db.Connect()
-	if err != nil {
-		return "", ErrDatabaseError
-	}
-	defer db.Close()
+//	- `ErrServer`
+//	- `ErrDatabase`
+//	- `ErrEmailTaken`
+//	- `ErrDisplayNameTaken`
+//	- `ErrEmailAndDisplayNameTaken`
+//	- `ErrPwdTooLong`
+func Register(db *sql.DB, u *UserRegistration) (*Session, error) {
 	rows, err := db.Query(`
 		SELECT email 
 		FROM user_credentials 
@@ -26,10 +23,11 @@ func Register(u *UserRegistration) (string, error) {
 		u.Email,
 	)
 	if err != nil {
-		return "", ErrDatabaseError
+		return nil, ErrDatabase
 	}
 	emailTaken := rows.Next()
 	rows.Close()
+	
 	rows, err = db.Query(`
 		SELECT display_name 
 		FROM user_data 
@@ -37,25 +35,28 @@ func Register(u *UserRegistration) (string, error) {
 		u.DisplayName,
 	)
 	if err != nil {
-		return "", ErrDatabaseError
+		return nil, ErrDatabase
 	}
 	displayNameTaken := rows.Next()
 	rows.Close()
+
 	switch {
 	case emailTaken && displayNameTaken:
-		return "", ErrEmailAndDisplayNameTaken
+		return nil, ErrEmailAndDisplayNameTaken
 	case emailTaken:
-		return "", ErrEmailTaken
+		return nil, ErrEmailTaken
 	case displayNameTaken:
-		return "", ErrDisplayNameTaken
+		return nil, ErrDisplayNameTaken
 	}
+
 	encryptedPassword, err := bcrypt.GenerateFromPassword(
 		[]byte(u.Password),
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		return "", ErrPwdTooLong
+		return nil, ErrPwdTooLong
 	}
+
 	_, err = db.Exec(`
 		INSERT INTO user_data
 			(email, first_name, last_name, display_name)
@@ -67,8 +68,9 @@ func Register(u *UserRegistration) (string, error) {
 		u.DisplayName,
 	)
 	if err != nil {
-		return "", ErrDatabaseError
+		return nil, ErrDatabase
 	}
+
 	_, err = db.Exec(`
 		INSERT INTO user_credentials
 			(email, password)
@@ -78,14 +80,16 @@ func Register(u *UserRegistration) (string, error) {
 		encryptedPassword,
 	)
 	if err != nil {
+		// if that query failed, then we should undo the last one as well.
 		db.Exec(`
 			DELETE FROM user_data 
 			WHERE email = ?
 			`,
 			u.Email,
 		)
-		return "", ErrDatabaseError
+		return nil, ErrDatabase
 	}
+
 	_, err = db.Exec(`
 		INSERT INTO user_preferences
 			(email)
@@ -95,6 +99,7 @@ func Register(u *UserRegistration) (string, error) {
 		u.Email,
 	)
 	if err != nil {
+		// if that query failed, then we should undo the previous two as well.
 		db.Exec(`
 			DELETE FROM user_data 
 			WHERE email = ?
@@ -107,7 +112,8 @@ func Register(u *UserRegistration) (string, error) {
 			`,
 			u.Email,
 		)
-		return "", ErrDatabaseError
+		return nil, ErrDatabase
 	}
-	return createNewSession(u.Email, db)
+
+	return CreateSession(db, u.Email)
 }

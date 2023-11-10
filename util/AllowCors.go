@@ -15,7 +15,7 @@ func AllowCors(w http.ResponseWriter, r *http.Request) (stop bool) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
 	// Handle preflight requests (OPTIONS)
-	if r.Method == "OPTIONS" {
+	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
 		return true
 	}

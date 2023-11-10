@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"yoshi/db"
 	"yoshi/db/user"
 	"yoshi/util"
 )
@@ -17,7 +18,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
@@ -27,8 +28,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	
+	db, err := db.Connect()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	defer db.Close()
 
-	sessionId, err := user.Register(registrationDetails)
+	session, err := user.Register(db, registrationDetails)
 	switch err {
 	case nil:
 		break
@@ -51,9 +58,9 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		})		
 		return
 	default:
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	util.SetSessionCookie(sessionId, w)
+	session.SetCookie(w)
 }
