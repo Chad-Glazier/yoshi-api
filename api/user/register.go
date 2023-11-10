@@ -63,4 +63,5 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.SetCookie(w)
+	w.WriteHeader(http.StatusCreated)
 }

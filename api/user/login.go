@@ -46,4 +46,5 @@ func LogIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session.SetCookie(w)
+	w.WriteHeader(http.StatusOK)
 }
