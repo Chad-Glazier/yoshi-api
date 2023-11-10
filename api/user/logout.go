@@ -2,12 +2,21 @@ package handlers
 
 import (
 	"net/http"
+	"yoshi/db/user"
+	"yoshi/util"
 )
 
 func LogOut(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:  "session_id",
-		Value: "",
-	})
+	stop := util.AllowCors(w, r)
+	if stop {
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	user.UnsetSessionCookie(w)
 	w.WriteHeader(http.StatusOK)
 }

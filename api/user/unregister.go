@@ -7,7 +7,7 @@ import (
 	"yoshi/util"
 )
 
-func Delete(w http.ResponseWriter, r *http.Request) {
+func Unregister(w http.ResponseWriter, r *http.Request) {
 	stop := util.AllowCors(w, r)
 	if stop {
 		return
@@ -38,6 +38,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Delete(db, email)	
+	user.Delete(db, email)
+	user.UnsetSessionCookie(w)
 	w.WriteHeader(http.StatusOK)
 }
