@@ -10,7 +10,3 @@ import (
 func Connect() (*sql.DB, error) {
 	return sql.Open("mysql", os.Getenv("DSN"))
 } 
-
-func Close(connection *sql.DB) (error) {
-	return connection.Close()
-}
