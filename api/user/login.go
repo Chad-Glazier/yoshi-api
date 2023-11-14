@@ -8,8 +8,8 @@ import (
 )
 
 func LogIn(w http.ResponseWriter, r *http.Request) {
-	stop := util.AllowCors(w, r)
-	if stop {
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
