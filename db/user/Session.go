@@ -3,6 +3,7 @@ package user
 import (
 	"database/sql"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -116,6 +117,8 @@ func (s *Session) SetCookie(w http.ResponseWriter) {
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
 		Secure:   true,
+		Path:	  "/",
+		Domain:   os.Getenv("DOMAIN"),
 	}
 	http.SetCookie(w, cookie)
 }
@@ -123,11 +126,14 @@ func (s *Session) SetCookie(w http.ResponseWriter) {
 // Unsets the `session_id` cookie.
 func UnsetSessionCookie(w http.ResponseWriter) {
 	cookie := &http.Cookie{
+		Expires:  time.Now().AddDate(0, -1, 0),
 		Name:     "session_id",
 		Value:    "",
-		Expires:  time.Now().AddDate(0, -1, 0),
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
+		Path:	  "/",
+		Domain:   os.Getenv("DOMAIN"),
 	}
 	http.SetCookie(w, cookie)
 }
