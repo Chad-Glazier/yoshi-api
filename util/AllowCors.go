@@ -12,6 +12,7 @@ import (
 func AllowCors(w http.ResponseWriter, r *http.Request) (stop bool) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 	// Handle preflight requests (OPTIONS)
 	if r.Method == http.MethodOptions {

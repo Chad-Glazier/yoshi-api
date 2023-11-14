@@ -115,6 +115,7 @@ func (s *Session) SetCookie(w http.ResponseWriter) {
 		Value:    s.Uuid,
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	}
 	http.SetCookie(w, cookie)
 }
@@ -134,8 +135,8 @@ func UnsetSessionCookie(w http.ResponseWriter) {
 // Creates a new session in the database for the specified user.
 //
 // Possible error values:
-//	- `ErrDatabase`
-//	- `ErrServer`
+//   - `ErrDatabase`
+//   - `ErrServer`
 func CreateSession(db *sql.DB, email string) (*Session, error) {
 	newSessionId, err := uuid.NewRandom()
 	if err != nil {
