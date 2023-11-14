@@ -11,6 +11,7 @@ import (
 // TL/DR: Ignore the request if this returns `true`.
 func AllowCors(w http.ResponseWriter, r *http.Request) (stop bool) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	// Handle preflight requests (OPTIONS)
 	if r.Method == http.MethodOptions {
