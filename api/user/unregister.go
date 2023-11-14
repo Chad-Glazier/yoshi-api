@@ -7,6 +7,10 @@ import (
 	"yoshi/util"
 )
 
+type DeletionConfirmation struct {
+	Password string `json:"password"`
+}
+
 func Unregister(w http.ResponseWriter, r *http.Request) {
 	stop := util.AllowCors(w, r)
 	if stop {
@@ -30,11 +34,33 @@ func Unregister(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		break
 	case user.ErrExpiredSession, user.ErrUnrecognizedSession, user.ErrNoAuthCookie:
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+		return
+	}
+
+	c, err := util.ParseBody[DeletionConfirmation](r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = user.CheckCredentials(db, email, c.Password)
+	switch err {
+	case nil:
+		break
+	case user.ErrDatabase, user.ErrServer:
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	case user.ErrEmailNotFound:
+		w.WriteHeader(http.StatusNotFound)
+		return
+	case user.ErrIncorrectPassword:
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

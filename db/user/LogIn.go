@@ -2,8 +2,6 @@ package user
 
 import (
 	"database/sql"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 // The incoming email and password of a user; the `Password` should be unhashed
@@ -13,7 +11,8 @@ type UserCredentials struct {
 }
 
 // This will take the credentials for a login attempt and return the new
-// session object or an error.
+// session object or an error. This is the same as using `CheckCredentials`,
+// except that function doesn't create a session.
 //
 // Potential errors include:
 //	- `ErrEmailNotFound`
@@ -21,31 +20,9 @@ type UserCredentials struct {
 //	- `ErrDatabase`
 //	- `ErrServer`
 func LogIn(db *sql.DB, c *UserCredentials) (*Session, error) {
-	rows, err := db.Query(`
-		SELECT email, password FROM user_credentials
-		WHERE email = ?
-	`, c.Email)
+	err := CheckCredentials(db, c.Email, c.Password)
 	if err != nil {
-		return nil, ErrDatabase
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return nil, ErrEmailNotFound
-	}
-
-	storedCredentials := UserCredentials{}
-	rows.Scan(
-		&storedCredentials.Email,
-		&storedCredentials.Password,
-	)
-
-	err = bcrypt.CompareHashAndPassword(
-		[]byte(storedCredentials.Password),
-		[]byte(c.Password),
-	)
-	if err != nil {
-		return nil, ErrIncorrectPassword
+		return nil, err
 	}
 
 	return CreateSession(db, c.Email)
