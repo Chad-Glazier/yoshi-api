@@ -2,53 +2,34 @@ package handlers
 
 import (
 	"net/http"
-	"yoshi/db"
 	"yoshi/db/user"
+	"yoshi/mw"
 	"yoshi/util"
 )
+
+func Unregister(w http.ResponseWriter, r *http.Request) {
+	mw.NewPipeline(
+		unregister,
+		mw.Cors,
+		mw.Method(http.MethodDelete),
+		mw.DB,
+		mw.Session,
+	).Run(w, r)
+}
 
 type DeletionConfirmation struct {
 	Password string `json:"password"`
 }
 
-func Unregister(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	db, err := db.Connect()
+func unregister(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
+	c, err := util.ParseBody[DeletionConfirmation](r)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
-
-	email, err := user.Authorized(db, r)
-	switch err {
-	case nil:
-		break
-	case user.ErrExpiredSession, user.ErrUnrecognizedSession, user.ErrNoAuthCookie:
-		w.WriteHeader(http.StatusNotFound)
-		return
-	default:
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
 		return
 	}
 
-	c, err := util.ParseBody[DeletionConfirmation](r)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	err = user.CheckCredentials(db, email, c.Password)
+	err = user.CheckCredentials(res.DB, res.Session.Email, c.Password)
 	switch err {
 	case nil:
 		break
@@ -64,7 +45,7 @@ func Unregister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Delete(db, email)
+	user.Delete(res.DB, res.Session.Email)
 	user.UnsetSessionCookie(w)
 	w.WriteHeader(http.StatusOK)
 }

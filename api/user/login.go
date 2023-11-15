@@ -2,35 +2,29 @@ package handlers
 
 import (
 	"net/http"
-	"yoshi/db"
 	"yoshi/db/user"
 	"yoshi/util"
+	"yoshi/mw"
 )
 
-func LogIn(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+func Login(w http.ResponseWriter, r *http.Request) {
+	mw.NewPipeline(
+		login,
+		mw.Cors,
+		mw.Method(http.MethodPost),
+		mw.DB,
+	).Run(w, r)
+}
 
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
+func login(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
 	credentials, err := util.ParseBody[user.UserCredentials](r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
-	db, err := db.Connect()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer db.Close()
-
-	session, err := user.LogIn(db, credentials)
+	session, err := user.LogIn(res.DB, credentials)
 	switch err {
 	case nil:
 		break

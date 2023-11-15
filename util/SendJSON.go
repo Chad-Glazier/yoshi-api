@@ -11,6 +11,7 @@ func SendJSON(w http.ResponseWriter, v any) {
 	str, err := json.Marshal(v)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")

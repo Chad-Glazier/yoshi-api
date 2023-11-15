@@ -2,30 +2,23 @@ package handlers
 
 import (
 	"net/http"
-	"yoshi/db"
 	"yoshi/db/user"
+	"yoshi/mw"
 )
 
-func LogOut(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+func Logout(w http.ResponseWriter, r *http.Request) {
+	mw.NewPipeline(
+		logout,
+		mw.Cors,
+		mw.Method(http.MethodDelete),
+		mw.DB,
+	).Run(w, r)
+}
 
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-	
-	db, err := db.Connect()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer db.Close()
-
-	session, _ := user.ExistingSession(db, r)
+func logout(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
+	session, _ := user.ExistingSession(res.DB, r)
 	if session != nil {
-		session.Terminate(db)
+		session.Terminate(res.DB)
 	}
 
 	user.UnsetSessionCookie(w)

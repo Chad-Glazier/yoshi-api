@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"yoshi/db"
 	"yoshi/db/user"
+	"yoshi/mw"
 	"yoshi/util"
 )
 
@@ -13,29 +13,23 @@ type RegistrationConflict struct {
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+	mw.NewPipeline(
+		register,
+		mw.Cors,
+		mw.Method(http.MethodPost),
+		mw.DB,
+	).Run(w, r)
+}
 
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	registrationDetails, err := util.ParseBody[user.UserRegistration](r)
+func register(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
+	u, err := util.ParseBody[user.UserRegistration](r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return
 	}
-	
-	db, err := db.Connect()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	defer db.Close()
 
-	session, err := user.Register(db, registrationDetails)
+	session, err := user.Register(res.DB, u)
 	switch err {
 	case nil:
 		break
@@ -60,6 +54,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	existingSession, _ := user.ExistingSession(res.DB, r)
+	if existingSession != nil {
+		existingSession.Terminate(res.DB)
 	}
 
 	session.SetCookie(w)
