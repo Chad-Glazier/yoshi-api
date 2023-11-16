@@ -12,13 +12,21 @@ type RegistrationConflict struct {
 	DisplayName bool `json:"displayName"`
 }
 
+type Profanity struct {
+	DisplayName bool `json:"displayName"`
+	FirstName   bool `json:"firstName"`
+	LastName    bool `json:"lastName"`
+}
+
 func Register(w http.ResponseWriter, r *http.Request) {
-	mw.NewPipeline(
-		register,
-		mw.Cors,
-		mw.Method(http.MethodPost),
-		mw.DB,
-	).Run(w, r)
+	mw.
+		NewPipeline(register).
+		Use(
+			mw.Cors,
+			mw.Method(http.MethodPost),
+			mw.DB,
+		).
+		Run(w, r)
 }
 
 func register(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
@@ -36,9 +44,10 @@ func register(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
 	case user.ErrEmailAndDisplayNameTaken:
 		w.WriteHeader(http.StatusConflict)
 		util.SendJSON(w, RegistrationConflict{
-			Email: true,
+			Email:       true,
 			DisplayName: true,
 		})
+		return
 	case user.ErrEmailTaken:
 		w.WriteHeader(http.StatusConflict)
 		util.SendJSON(w, RegistrationConflict{
@@ -49,7 +58,25 @@ func register(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
 		util.SendJSON(w, RegistrationConflict{
 			DisplayName: true,
-		})		
+		})
+		return
+	case user.ErrProfaneDisplayName:
+		w.WriteHeader(http.StatusBadRequest)
+		util.SendJSON(w, Profanity{
+			DisplayName: true,
+		})
+		return
+	case user.ErrProfaneFirstName:
+		w.WriteHeader(http.StatusBadRequest)
+		util.SendJSON(w, Profanity{
+			FirstName: true,
+		})
+		return
+	case user.ErrProfaneLastName:
+		w.WriteHeader(http.StatusBadRequest)
+		util.SendJSON(w, Profanity{
+			LastName: true,
+		})
 		return
 	default:
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -17,3 +17,10 @@ func SendJSON(w http.ResponseWriter, v any) {
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(str)
 }
+
+// Sends the given string as a JSON object. I.e., it sets the Content-Type 
+// header and writes the string to the response.
+func SendAsJSON(w http.ResponseWriter, s string) {
+	w.Header().Add("Content-Type", "application/json")
+	w.Write([]byte(s))
+} 

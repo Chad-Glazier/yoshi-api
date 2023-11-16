@@ -12,7 +12,6 @@ type EndHandler = func(*Resources, http.ResponseWriter, *http.Request)
 type Resources = struct {
 	DB      *sql.DB
 	Session *user.Session
-	Body	any
 }
 
 type Pipeline struct {
@@ -48,17 +47,18 @@ func (p *Pipeline) cleanup() {
 	}
 }
 
-func (p *Pipeline) Use(middleware ...MiddlewareFunc) {
+func (p *Pipeline) Use(middleware ...MiddlewareFunc) *Pipeline {
 	p.middleware = append(p.middleware, middleware...)
+	return p
 }
 
-func (p *Pipeline) SetEndHandler(h EndHandler) {
+func (p *Pipeline) SetEndHandler(h EndHandler) *Pipeline {
 	p.endHandler = h
+	return p
 }
 
-func NewPipeline(endHandler EndHandler, middleware ...MiddlewareFunc) *Pipeline {
+func NewPipeline(endHandler EndHandler) *Pipeline {
 	var pipeline Pipeline
-	pipeline.Use(middleware...)
 	pipeline.SetEndHandler(endHandler)
 	return &pipeline
 }

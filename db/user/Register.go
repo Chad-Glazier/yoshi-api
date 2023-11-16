@@ -2,9 +2,19 @@ package user
 
 import (
 	"database/sql"
+	"yoshi/util"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+// A struct that represents all of the data necessary to register a new user.
+type UserRegistration struct {
+	Email       string `json:"email" validate:"required,email"`
+	Password    string `json:"password" validate:"required"`
+	FirstName   string `json:"firstName" validate:"required"`
+	LastName    string `json:"lastName" validate:"required"`
+	DisplayName string `json:"displayName" validate:"required"`
+}
 
 // Registers a user and creates a new session, returning the session cookie.
 //
@@ -15,7 +25,19 @@ import (
 //	- `ErrDisplayNameTaken`
 //	- `ErrEmailAndDisplayNameTaken`
 //	- `ErrPwdTooLong`
+//	- `ErrProfaneDisplayName`
+//	- `ErrProfaneFirstName`
+//	- `ErrProfaneLastName`
 func Register(db *sql.DB, u *UserRegistration) (*Session, error) {
+	switch {
+	case util.ContainsProfanity(u.DisplayName):
+		return nil, ErrProfaneDisplayName
+	case util.ContainsProfanity(u.FirstName):
+		return nil, ErrProfaneFirstName
+	case util.ContainsProfanity(u.LastName):
+		return nil, ErrProfaneLastName
+	}
+
 	rows, err := db.Query(`
 		SELECT email 
 		FROM user_credentials 

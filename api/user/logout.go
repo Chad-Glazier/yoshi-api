@@ -7,12 +7,14 @@ import (
 )
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	mw.NewPipeline(
-		logout,
-		mw.Cors,
-		mw.Method(http.MethodDelete),
-		mw.DB,
-	).Run(w, r)
+	mw.
+		NewPipeline(logout).
+		Use(
+			mw.Cors,
+			mw.Method(http.MethodDelete),
+			mw.DB,
+		).
+		Run(w, r)
 }
 
 func logout(res *mw.Resources, w http.ResponseWriter, r *http.Request) {

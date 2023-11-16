@@ -55,7 +55,8 @@ func ExistingSession(db *sql.DB, r *http.Request) (*Session, error) {
 	if !rows.Next() {
 		return nil, ErrUnrecognizedSession
 	}
-	session := &Session{}
+
+	session := Session{}
 	err = rows.Scan(
 		&session.Email,
 		&session.Uuid,
@@ -64,7 +65,7 @@ func ExistingSession(db *sql.DB, r *http.Request) (*Session, error) {
 	if err != nil {
 		return nil, ErrServer
 	}
-	return session, nil
+	return &session, nil
 }
 
 // Returns `true` if the session is expired, otherwise returning `false`.

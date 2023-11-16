@@ -8,12 +8,14 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	mw.NewPipeline(
-		login,
-		mw.Cors,
-		mw.Method(http.MethodPost),
-		mw.DB,
-	).Run(w, r)
+	mw.
+		NewPipeline(login).
+		Use(
+			mw.Cors,
+			mw.Method(http.MethodPost),
+			mw.DB,			
+		).
+		Run(w, r)
 }
 
 func login(res *mw.Resources, w http.ResponseWriter, r *http.Request) {

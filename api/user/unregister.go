@@ -8,13 +8,15 @@ import (
 )
 
 func Unregister(w http.ResponseWriter, r *http.Request) {
-	mw.NewPipeline(
-		unregister,
-		mw.Cors,
-		mw.Method(http.MethodDelete),
-		mw.DB,
-		mw.Session,
-	).Run(w, r)
+	mw.
+		NewPipeline(unregister).
+		Use(	
+			mw.Cors,
+			mw.Method(http.MethodDelete),
+			mw.DB,
+			mw.Session,
+		).
+		Run(w, r)
 }
 
 type DeletionConfirmation struct {
@@ -33,15 +35,14 @@ func unregister(res *mw.Resources, w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 		break
-	case user.ErrDatabase, user.ErrServer:
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
-		return
 	case user.ErrEmailNotFound:
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	case user.ErrIncorrectPassword:
-		w.WriteHeader(http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	default:
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

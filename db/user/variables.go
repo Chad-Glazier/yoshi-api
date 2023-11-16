@@ -16,14 +16,9 @@ var (
 	ErrUnrecognizedSession      = errors.New("the session cookie wasn't found in the database")
 	ErrServer                   = errors.New("the server had some kind of unexpected error")
 	ErrEmailNotFound            = errors.New("no user matching that email was found")
+	ErrDisplayNameNotFound	    = errors.New("no user matching that display name was found")
 	ErrIncorrectPassword        = errors.New("incorrect password")
+	ErrProfaneDisplayName		= errors.New("the display name contains profanity")
+	ErrProfaneFirstName			= errors.New("the first name contains profanity")
+	ErrProfaneLastName			= errors.New("the last name contains profanity")
 )
-
-// A struct that represents all of the data necessary to register a new user.
-type UserRegistration struct {
-	Email       string `json:"email" validate:"required,email"`
-	Password    string `json:"password" validate:"required"`
-	FirstName   string `json:"firstName" validate:"required"`
-	LastName    string `json:"lastName" validate:"required"`
-	DisplayName string `json:"displayName" validate:"required"`
-}
