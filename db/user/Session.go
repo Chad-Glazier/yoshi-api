@@ -179,3 +179,4 @@ func CreateSession(db *sql.DB, email string) (*Session, error) {
 	)
 	return &newSession, nil
 }
+
