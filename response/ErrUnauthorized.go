@@ -3,7 +3,7 @@ package response
 import "net/http"
 
 type BodyUnauthorized struct {
-	Message string	`json:"message"`
+	Message string `json:"message"`
 }
 
 func ErrUnauthorized() *Res[BodyUnauthorized] {

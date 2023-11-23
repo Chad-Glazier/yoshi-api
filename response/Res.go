@@ -28,5 +28,3 @@ func (r *Res[T]) Print() {
 	body, _ := json.Marshal(r.Body)
 	fmt.Printf("\nStatus %d\nBody:\n%s\n", r.Status, body)
 }
-
-

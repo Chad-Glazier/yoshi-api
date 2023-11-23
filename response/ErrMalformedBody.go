@@ -1,8 +1,8 @@
 package response
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 )
 
 type Exemplar[T any] interface {
@@ -18,7 +18,7 @@ type BodyMalformedBody[T Exemplar[T]] struct {
 func ErrMalformedBody[T Exemplar[T]](r *http.Request) *Res[BodyMalformedBody[T]] {
 	var expected T
 	expected = expected.Example()
-	
+
 	var received any
 	decoder := json.NewDecoder(r.Body)
 	decoder.Decode(&received)
@@ -26,7 +26,7 @@ func ErrMalformedBody[T Exemplar[T]](r *http.Request) *Res[BodyMalformedBody[T]]
 	res := Res[BodyMalformedBody[T]]{
 		Status: http.StatusBadRequest,
 		Body: BodyMalformedBody[T]{
-			Reason: "malformed request body",
+			Reason:   "malformed request body",
 			Expected: expected,
 			Received: received,
 		},
